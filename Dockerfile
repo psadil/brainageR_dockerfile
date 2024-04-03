@@ -216,3 +216,6 @@ make && \
 make install
 
 RUN chmod +x /opt/brainageR/software/brainageR
+
+ENTRYPOINT [ "/opt/brainageR/software/brainageR" ]
+CMD [ "--help" ]
