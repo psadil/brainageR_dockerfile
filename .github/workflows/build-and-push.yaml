@@ -18,6 +18,14 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Free up Disk Space
+        run: |
+          # Prune unused Docker objects (images, containers, volumes, and networks)
+          docker system prune --all -f || true
+
+          # Show disk space usage
+          df -h
+
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
@@ -32,5 +40,4 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           annotations: ${{ steps.meta.outputs.annotations }}
           platforms: linux/amd64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          

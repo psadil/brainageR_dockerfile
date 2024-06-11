@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 ## brainageR software, global wrapper script
 ## James Cole, University College London james.cole@ucl.ac.uk
 ## software version 2.1 Oct 2020
@@ -29,6 +29,7 @@ EOF
 }
 
 ############################################################################
+debug_mode=0
 
 while getopts ":f:o:dh:" opt; do
     case "${opt}" in
@@ -44,65 +45,52 @@ if [ -z "${input_file}" ] || [ -z "${output_filename}" ]; then
     usage
 fi
 
-#if [[ "$OSTYPE" == "darwin"* ]]; then
-#	full_path_file=`greadlink -f $input_file`
-#else
-#	full_path_file=`readlink -f $input_file`
-#fi
+set -eu
 
-full_path_file=`readlink -f $input_file`
-
-file_name=`basename -s .nii $full_path_file`
-full_path=`echo $full_path_file | sed -e "s@${file_name}.nii@@"`
-echo $full_path
-
-# We reset the header realigning the input image to MNI to ensure all values are in the proper range
-seg_maths $full_path_file -mul 1 -scl -range $full_path_file
-reg_aladin -ref ${FSLDIR}/data/standard/MNI152_T1_1mm.nii.gz -flo $full_path_file -aff affine.txt -res remove.nii.gz
-reg_transform -updSform $full_path_file affine.txt $full_path_file
-fslorient -copysform2qform $full_path_file $full_path_file
-
-echo $full_path
+full_path_file=$(readlink -f "${input_file}")
+echo "${full_path_file}"
 
 ## check files are uncompressed NIFTI fortmat
-#if [[ $full_path_file != *.nii ]]; then usage; fi
-## check software environment and attempt to load using module
-## CONFIGURE FOR YOUR LOCAL SYSTEM
-#for software in R matlab fsl; do
-#	software_check=`type $software | grep -o bin`
-#	if [ ! $software_check == "bin" ]; then module load $software; fi
-#	software_check2=`type $software | grep -o bin`
-#	if [ ! $software_check2 == "bin" ]; then echo $software not found; exit 1; fi
-#done
-## set software directories for your local system
-brainageR_dir=/opt/brainageR
-spm_dir=/opt/spm12/
-matlab_path=/usr/bin/octave
-FSLDIR=/usr/share/fsl/5.0
+if [[ $full_path_file != *.nii ]]; then usage; fi
+
+file_name=$(basename -s .nii "${full_path_file}")
+full_path=$(dirname "${full_path_file}")
 
 ## run brainageR analysis
-echo "addpath(['$brainageR_dir','/software/']);spm_preprocess_brainageR('$full_path_file',['$brainageR_dir','/software/templates/'], '$spm_dir');exit"  >init_octave
 ### SPM12 segmentation and normalisation
-cmd="$matlab_path --no-gui --no-window-system init_octave" 
-eval ${cmd}
+config=${full_path}/${file_name}.m
+sed "s@TEMPLATE_DIR@${BRAINAGER_SOFTWARE_DIR}/templates/@g" "${BRAINAGER_SOFTWARE_DIR}"/spm_preprocess_brainageR.m \
+	| sed "s@T1@${full_path_file}@g" \
+	> "${config}"
+${SPM_BIN} batch "${config}"
+
 ### check that the pre-processing has completed
 if [ ! -f "${full_path}/smwc1${file_name}.nii" ]; then
 	echo "Processed grey matter file not found: SPM12 pre-processing probably failed"
 	exit 1
 fi
-echo ${full_path}/smwc1${file_name}.nii > /tmp/smwc1${file_name}.txt
-echo ${full_path}/smwc2${file_name}.nii > /tmp/smwc2${file_name}.txt
-echo ${full_path}/smwc3${file_name}.nii > /tmp/smwc3${file_name}.txt
+echo "${full_path}"/smwc1"${file_name}".nii > /tmp/smwc1"${file_name}".txt
+echo "${full_path}"/smwc2"${file_name}".nii > /tmp/smwc2"${file_name}".txt
+echo "${full_path}"/smwc3"${file_name}".nii > /tmp/smwc3"${file_name}".txt
+
 ### generate QC images and html file
-bash "$brainageR_dir"/software/slicesdir.brainageR -n ${full_path}/${file_name}.nii ${full_path}/[c,s]*[1,2,3]*${file_name}.nii
+bash "${BRAINAGER_SOFTWARE_DIR}"/slicesdir.brainageR \
+	-n "${full_path}"/"${file_name}".nii \
+	"${full_path}"/[c,s]*{1,2,3}*"${file_name}".nii
+
 ### generate predictions
-Rscript "$brainageR_dir"/software/predict_new_data_gm_wm_csf.R "${brainageR_dir}" /tmp/smwc1${file_name}.txt /tmp/smwc2${file_name}.txt /tmp/smwc3${file_name}.txt "${brainageR_dir}"/software/GPR_model_gm_wm_csf.RData $output_filename
+Rscript "${BRAINAGER_SOFTWARE_DIR}"/predict_new_data_gm_wm_csf.R \
+	"${BRAINAGER_DIR}" /tmp/smwc1"${file_name}".txt \
+	/tmp/smwc2"${file_name}".txt /tmp/smwc3"${file_name}".txt \
+	"${BRAINAGER_SOFTWARE_DIR}"/GPR_model_gm_wm_csf.RData \
+	"${output_filename}"
+
 ### clean up
-if [ -z $debug_mode ]; then
+if [[ $debug_mode == 0 ]]; then
 	if [ -f "${full_path}/c1${file_name}.nii" ]; then
 		for img in c1 c2 c3 rc1 rc2 rc3 u_rc1 smwc1 smwc2 smwc3; do
-			rm ${full_path}/${img}${file_name}.nii
+			rm "${full_path}"/${img}"${file_name}".nii
 		done
 	fi
-	rm ${full_path}/${file_name}*seg8.mat
+	rm "${full_path}"/"${file_name}"*seg8.mat
 fi
