@@ -4,7 +4,7 @@
 ## software version 2.1 Oct 2020
 
 usage() {
-    cat <<EOF
+	cat <<EOF
 
 brainageR software version 2.1 Oct 2020
 
@@ -25,27 +25,27 @@ SPM (MATLAB)
 FSL (for slicesdir)
 
 EOF
-    exit 1
+	exit 1
 }
 
 ############################################################################
 debug_mode=0
 
 while getopts ":f:o:dh:" opt; do
-    case "${opt}" in
-        f)  	input_file=${OPTARG} ;;
-        o)	output_filename=${OPTARG} ;;
-        d)	debug_mode=1 ;;
-        h|*)    usage ;;
-    esac
+	case "${opt}" in
+	f) input_file=${OPTARG} ;;
+	o) output_filename=${OPTARG} ;;
+	d) debug_mode=1 ;;
+	h | *) usage ;;
+	esac
 done
-shift $((OPTIND-1))
+shift $((OPTIND - 1))
 
-if [ -z "${input_file}" ] || [ -z "${output_filename}" ]; then
-    usage
+if [[ -z "${input_file}" ]] || [[ -z "${output_filename}" ]]; then
+	usage
 fi
 
-set -eu
+set -eux
 
 full_path_file=$(readlink -f "${input_file}")
 echo "${full_path_file}"
@@ -59,19 +59,19 @@ full_path=$(dirname "${full_path_file}")
 ## run brainageR analysis
 ### SPM12 segmentation and normalisation
 config=${full_path}/${file_name}.m
-sed "s@TEMPLATE_DIR@${BRAINAGER_SOFTWARE_DIR}/templates/@g" "${BRAINAGER_SOFTWARE_DIR}"/spm_preprocess_brainageR.m \
-	| sed "s@T1@${full_path_file}@g" \
-	> "${config}"
+sed "s@TEMPLATE_DIR@${BRAINAGER_SOFTWARE_DIR}/templates/@g" "${BRAINAGER_SOFTWARE_DIR}"/spm_preprocess_brainageR.m |
+	sed "s@T1@${full_path_file}@g" \
+		>"${config}"
 ${SPM_BIN} batch "${config}"
 
 ### check that the pre-processing has completed
-if [ ! -f "${full_path}/smwc1${file_name}.nii" ]; then
+if [[ ! -f "${full_path}/smwc1${file_name}.nii" ]]; then
 	echo "Processed grey matter file not found: SPM12 pre-processing probably failed"
 	exit 1
 fi
-echo "${full_path}"/smwc1"${file_name}".nii > /tmp/smwc1"${file_name}".txt
-echo "${full_path}"/smwc2"${file_name}".nii > /tmp/smwc2"${file_name}".txt
-echo "${full_path}"/smwc3"${file_name}".nii > /tmp/smwc3"${file_name}".txt
+echo "${full_path}"/smwc1"${file_name}".nii >/tmp/smwc1"${file_name}".txt
+echo "${full_path}"/smwc2"${file_name}".nii >/tmp/smwc2"${file_name}".txt
+echo "${full_path}"/smwc3"${file_name}".nii >/tmp/smwc3"${file_name}".txt
 
 ### generate QC images and html file
 bash "${BRAINAGER_SOFTWARE_DIR}"/slicesdir.brainageR \
@@ -87,7 +87,7 @@ Rscript "${BRAINAGER_SOFTWARE_DIR}"/predict_new_data_gm_wm_csf.R \
 
 ### clean up
 if [[ $debug_mode == 0 ]]; then
-	if [ -f "${full_path}/c1${file_name}.nii" ]; then
+	if [[ -f "${full_path}/c1${file_name}.nii" ]]; then
 		for img in c1 c2 c3 rc1 rc2 rc3 u_rc1 smwc1 smwc2 smwc3; do
 			rm "${full_path}"/${img}"${file_name}".nii
 		done
