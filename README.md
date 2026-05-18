@@ -8,4 +8,4 @@ You can analyze a raw T1-weighted MRI scan with the following command:
 docker run --rm -it -v ${PWD}/your_data:/data ghcr.io/psadil/brainager_dockerfile:main -f /data/sub-01_T1w_defaced.nii -o /data/sub-01_T1w_defaced.csv
 ```
 
-'sub-01_T1w_defaced.nii' is the name of the raw T1-weighted MRI scan decompressed in nii format placed in your_data folder, and 'subj01_brain_predicted.age.csv' is the .csv file where the age predictions are saved (note: only .nii and not .nii.gz files are accepted as input).
+`sub-01_T1w_defaced.nii` is the name of the raw T1-weighted MRI scan decompressed in nii format placed in your_data folder, and `subj01_brain_predicted.age.csv` is the .csv file where the age predictions are saved.
