@@ -8,17 +8,17 @@ RUN micromamba install -q --name base --yes --file /tmp/env.yml \
     && rm /tmp/env.yml \
     && micromamba clean --yes --all
 
-ENV MATLAB_VERSION=R2019b
-ENV MCR_VERSION=v97
+ENV MATLAB_VERSION=R2017b
+ENV MCR_VERSION=v93
 USER root
-ADD --chown=$MAMBA_USER:$MAMBA_USER https://ssd.mathworks.com/supportfiles/downloads/R2019b/Release/9/deployment_files/installer/complete/glnxa64/MATLAB_Runtime_R2019b_Update_9_glnxa64.zip /tmp/
-RUN unzip -q /tmp/MATLAB_Runtime_R2019b_Update_9_glnxa64.zip -d /tmp/mcr_install \
+ADD --chown=$MAMBA_USER:$MAMBA_USER https://ssd.mathworks.com/supportfiles/downloads/${MATLAB_VERSION}/deployment_files/${MATLAB_VERSION}/installers/glnxa64/MCR_${MATLAB_VERSION}_glnxa64_installer.zip /tmp/
+RUN unzip -q /tmp/MCR_${MATLAB_VERSION}_glnxa64_installer.zip -d /tmp/mcr_install \
     && /tmp/mcr_install/install -destinationFolder /opt/mcr -agreeToLicense yes -mode silent \
     && rm -rf /tmp/mcr_install /tmp/*
 
 # Install SPM Standalone in /opt/spm12/
 ENV SPM_VERSION=12
-ENV SPM_REVISION=r7771
+ENV SPM_REVISION=r7219
 ENV LD_LIBRARY_PATH=/opt/mcr/${MCR_VERSION}/runtime/glnxa64:/opt/mcr/${MCR_VERSION}/bin/glnxa64:/opt/mcr/${MCR_VERSION}/sys/os/glnxa64:/opt/mcr/${MCR_VERSION}/sys/opengl/lib/glnxa64:/opt/conda/lib
 ENV MCR_INHIBIT_CTF_LOCK=1
 ADD --chown=$MAMBA_USER:$MAMBA_USER https://www.fil.ion.ucl.ac.uk/spm/download/restricted/bids/spm${SPM_VERSION}_${SPM_REVISION}_Linux_${MATLAB_VERSION}.zip /tmp/

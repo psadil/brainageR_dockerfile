@@ -1,4 +1,4 @@
-spm_dir='/opt/spm12/spm12_mcr/spm12/spm12/';
+spm_dir='/opt/spm12/spm12_mcr/spm/spm12/';
 template_dir='TEMPLATE_DIR';
 t1='T1';
 addpath(spm_dir);
