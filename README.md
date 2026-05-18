@@ -4,6 +4,14 @@ Dockerfile creates a base docker container that can execute the new version 2.1 
 
 You can analyze a raw T1-weighted MRI scan with the following command:
 
-       docker run --rm -it -v ${PWD}/your_data:/data -w /data psadil/brainager -f /data/sub-01_T1w_defaced.nii -o /data/subj01_brain_predicted.age.csv
+```{bash}
+docker run --rm -it -v ${PWD}/your_data:/data -w /data psadil/brainager -f /data/sub-01_T1w_defaced.nii -o /data/sub-01_T1w_defaced.csv
+```
 
-'sub-01_T1w_defaced.nii' is the name of the raw T1-weighted MRI scan decompressed in nii format placed in your_data folder, and 'subj01_brain_predicted.age.csv' is the .csv file where the age predictions are saved.
+'sub-01_T1w_defaced.nii' is the name of the raw T1-weighted MRI scan decompressed in nii format placed in your_data folder, and 'subj01_brain_predicted.age.csv' is the .csv file where the age predictions are saved (note: only .nii and not .nii.gz files are accepted as input).
+
+## Building Image
+
+```{bash}
+docker build -t psadil/brainager:260518 --platform=linux/amd64 --provenance=true .
+```
