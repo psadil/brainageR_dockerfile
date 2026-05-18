@@ -9,5 +9,3 @@ docker run --rm -it -v ${PWD}/your_data:/data ghcr.io/psadil/brainager_dockerfil
 ```
 
 'sub-01_T1w_defaced.nii' is the name of the raw T1-weighted MRI scan decompressed in nii format placed in your_data folder, and 'subj01_brain_predicted.age.csv' is the .csv file where the age predictions are saved (note: only .nii and not .nii.gz files are accepted as input).
-
-```
